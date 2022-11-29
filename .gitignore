@@ -1,4 +1,6 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
+# Credentials
+.env
 
 # compiled output
 /dist
@@ -37,3 +39,6 @@ testem.log
 # System Files
 .DS_Store
 Thumbs.db
+
+# Open street map data
+openstreetmap-data

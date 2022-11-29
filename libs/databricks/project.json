@@ -1,0 +1,32 @@
+{
+  "root": "libs/databricks",
+  "sourceRoot": "libs/databricks/src",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/databricks",
+        "main": "libs/databricks/src/index.ts",
+        "tsConfig": "libs/databricks/tsconfig.lib.json",
+        "assets": ["libs/databricks/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/databricks/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/libs/databricks"],
+      "options": {
+        "jestConfig": "libs/databricks/jest.config.js",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

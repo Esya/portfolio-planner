@@ -1,4 +1,11 @@
+# Getting started
+```
+# Copy the .env file and fill it with credentials
+cp .env.example .env
 
+# start the API and the frontend
+npx nx run-many --target=serve --all  
+```
 
 # Wemaintain
 
