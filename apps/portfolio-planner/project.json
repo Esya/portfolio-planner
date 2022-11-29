@@ -1,0 +1,74 @@
+{
+  "root": "apps/portfolio-planner",
+  "sourceRoot": "apps/portfolio-planner/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/web:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "compiler": "babel",
+        "outputPath": "dist/apps/portfolio-planner",
+        "index": "apps/portfolio-planner/src/index.html",
+        "baseHref": "/",
+        "main": "apps/portfolio-planner/src/main.tsx",
+        "polyfills": "apps/portfolio-planner/src/polyfills.ts",
+        "tsConfig": "apps/portfolio-planner/tsconfig.app.json",
+        "assets": [
+          "apps/portfolio-planner/src/favicon.ico",
+          "apps/portfolio-planner/src/assets"
+        ],
+        "styles": [],
+        "scripts": [],
+        "webpackConfig": "@nrwl/react/plugins/webpack"
+      },
+      "configurations": {
+        "production": {
+          "fileReplacements": [
+            {
+              "replace": "apps/portfolio-planner/src/environments/environment.ts",
+              "with": "apps/portfolio-planner/src/environments/environment.prod.ts"
+            }
+          ],
+          "optimization": true,
+          "outputHashing": "all",
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/web:dev-server",
+      "options": {
+        "buildTarget": "portfolio-planner:build",
+        "hmr": true,
+        "proxyConfig": "apps/portfolio-planner/proxy.conf.json"
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "portfolio-planner:build:production",
+          "hmr": false
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/portfolio-planner/**/*.{ts,tsx,js,jsx}"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/apps/portfolio-planner"],
+      "options": {
+        "jestConfig": "apps/portfolio-planner/jest.config.js",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}
