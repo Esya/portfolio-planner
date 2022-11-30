@@ -16,7 +16,8 @@
     "baseUrl": ".",
     "paths": {
       "@wemaintain/api-interfaces": ["libs/api-interfaces/src/index.ts"],
-      "@wemaintain/databricks": ["libs/databricks/src/index.ts"]
+      "@wemaintain/databricks": ["libs/databricks/src/index.ts"],
+      "@wemaintain/logger": ["libs/logger/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

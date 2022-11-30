@@ -21,5 +21,8 @@ A base scenario is computed where :
 - Each device is pinned to it's current mechanic
 - A plan is made 
 
+# Routes 
+
+
 # Questions
 - Maybe exclude SSI for now ? (Since we can't know in db if an engineer does SSI or not)

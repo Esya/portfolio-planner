@@ -4,6 +4,7 @@
     "api": "apps/api",
     "api-interfaces": "libs/api-interfaces",
     "databricks": "libs/databricks",
+    "logger": "libs/logger",
     "portfolio-planner": "apps/portfolio-planner",
     "portfolio-planner-e2e": "apps/portfolio-planner-e2e"
   }
