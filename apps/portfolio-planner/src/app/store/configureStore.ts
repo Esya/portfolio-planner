@@ -1,12 +1,15 @@
 import { configureStore } from '@reduxjs/toolkit'
 import createSagaMiddleware from 'redux-saga'
+import datasetSlice from '../slices/dataset/dataset.slice'
 import rootSaga from './rootSaga'
 
 // Create the saga middleware
 const sagaMiddleware = createSagaMiddleware()
 
 export const store = configureStore({
-  reducer: {},
+  reducer: {
+    dataset: datasetSlice,
+  },
   middleware: [sagaMiddleware],
 })
 

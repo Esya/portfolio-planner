@@ -10,6 +10,9 @@ combined.log
 dataset.json
 distance-matrix.json
 
+# Datasets
+datasets
+
 # compiled output
 /dist
 /tmp

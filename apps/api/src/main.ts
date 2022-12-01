@@ -1,11 +1,14 @@
 import * as express from 'express'
-import { Message } from '@wemaintain/api-interfaces'
+import * as cors from 'cors'
+
+import { DatasetResponse, Message } from '@wemaintain/api-interfaces'
 import { config } from 'dotenv'
 import { Databricks } from '@wemaintain/databricks'
 import { DatasetBuilder } from './app/dataset-builder'
 
 config()
 const app = express()
+app.use(cors())
 
 const greeting: Message = { message: 'Welcome to api!' }
 
@@ -13,10 +16,19 @@ app.get('/api', (req, res) => {
   res.send(greeting)
 })
 
-app.get('/build', async (req, res) => {
-  const data = await DatasetBuilder.build('FR')
-  data.writeToFile('dataset.json')
-  res.send(data)
+app.get('/build/:countryCode', async (req, res) => {
+  const data = await DatasetBuilder.build(req.params.countryCode)
+  data.writeToFile()
+  res.send()
+})
+
+app.get('/dataset/:countryCode', async (req, res) => {
+  const data = await DatasetBuilder.loadFromFile(req.params.countryCode)
+  res.send({
+    buildings: data.buildings,
+    devices: data.devices,
+    engineers: data.engineers,
+  } as DatasetResponse)
 })
 
 app.get('/compute', async (req, res) => {
