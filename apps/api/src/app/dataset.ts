@@ -32,15 +32,4 @@ export class Dataset {
       })
     )
   }
-
-  public async computeDistanceMatrix() {
-    // Build query string from buildings
-    Logger.info('Computing distance matrix for ' + this.buildings.length + ' buildings')
-    const coords = this.buildings.map((b) => `${b.longitude},${b.latitude}`).join(';')
-    const response = await fetch('http://127.0.0.1:5000/table/v1/car/' + coords)
-    const data = await response.json()
-
-    writeFileSync(`${this.datasetFolder}/${this.countryCode}-matrix.json`, JSON.stringify(data))
-    Logger.info('Finished computing distance matrix')
-  }
 }

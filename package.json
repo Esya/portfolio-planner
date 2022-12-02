@@ -33,6 +33,7 @@
     "redux-saga": "^1.2.1",
     "regenerator-runtime": "0.13.7",
     "styled-components": "5.3.5",
+    "tmp-promise": "^3.0.3",
     "tslib": "^2.0.0",
     "typed-redux-saga": "^1.5.0",
     "winston": "^3.8.2"

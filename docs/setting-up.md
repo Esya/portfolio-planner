@@ -10,4 +10,9 @@ docker run -t -v "${PWD}/openstreetmap-data:/data" osrm/osrm-backend osrm-custom
 
 # 4- Launch
 docker run -t -i -p 5000:5000 -v "${PWD}/openstreetmap-data:/data" osrm/osrm-backend osrm-routed --algorithm mld --max-table-size 10000 /data/malaysia-singapore-brunei-latest.osrm
+
+# Install rust
+# Install cargo
+cargo install vrp-cli
+
 ```
