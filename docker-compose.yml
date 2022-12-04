@@ -1,0 +1,18 @@
+version: '3.3'
+services:
+  osrm-france:
+    ports:
+      - '5000:5000'
+    volumes:
+      - '${PWD}/openstreetmap-data:/data'
+    image: osrm/osrm-backend
+    command: osrm-routed --algorithm mld --max-table-size 10000 /data/france-latest.osrm
+  vroom-docker:
+    container_name: vroom
+    ports:
+      - '3000:3000'
+    volumes:
+      - '$PWD/conf:/conf'
+    environment:
+      - VROOM_ROUTER=osrm
+    image: 'vroomvrp/vroom-docker:v1.12.2'

@@ -50,12 +50,14 @@ export interface VRPVehicle {
   shifts: VRPShift[]
 }
 
-export interface VRPObjective {}
+export interface VRPObjective {
+  type: string
+}
 
 export interface VRPProblem {
   plan: { jobs: VRPJob[] }
   fleet: { vehicles: VRPVehicle[]; profiles: { name: string }[] }
-  objectives?: VRPObjective[]
+  objectives?: VRPObjective[][]
 }
 
 export interface VRPSolution {}

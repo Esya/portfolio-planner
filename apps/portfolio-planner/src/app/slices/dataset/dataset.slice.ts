@@ -32,10 +32,11 @@ export const datasetSlice = createSlice({
     setEngineers: (state, action: PayloadAction<DatasetEngineer[]>) => {
       state.engineers = action.payload
     },
+    runOptimizer: (state, action: PayloadAction<undefined>) => {},
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { setCountry, setDevices, setEngineers, setBuildings } = datasetSlice.actions
+export const { setCountry, setDevices, setEngineers, setBuildings, runOptimizer } = datasetSlice.actions
 
 export default datasetSlice.reducer

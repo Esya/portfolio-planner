@@ -1,14 +1,18 @@
 import * as express from 'express'
 import * as cors from 'cors'
+import * as bodyParser from 'body-parser'
 
-import { DatasetResponse, Message } from '@wemaintain/api-interfaces'
+import { APIProblem, DatasetResponse, Message } from '@wemaintain/api-interfaces'
 import { config } from 'dotenv'
 import { DatasetBuilder } from './app/dataset-builder'
-import { Engine } from './app/engine'
+import { VRPEngine } from './app/engines/vrp/vrp-engine'
+import { VRPProblem } from './app/engines/vrp/vrp.interfaces'
+import { VroomEngine } from './app/engines/vroom/vroom-engine'
 
 config()
 const app = express()
 app.use(cors())
+app.use(bodyParser.json({ limit: '50mb' }))
 
 const greeting: Message = { message: 'Welcome to api!' }
 
@@ -33,35 +37,73 @@ app.get('/dataset/:countryCode', async (req, res) => {
 })
 
 //:48.86776,"longitude":2.29286,"country":"FR"},{"building_id":4537,"building_name":"Les Fontaines","latitude":48.85428,"longitude":2.49141,"cou
-app.get('/solve', async (req, res) => {
-  const output = await Engine.solve({
-    plan: {
-      jobs: [
-        {
-          id: 'job-1',
-          services: [{ places: [{ duration: 3600, location: { lat: 48.85428, lng: 2.49141 } }] }],
-        },
-      ],
-    },
+app.get('/solve-dummy', async (req, res) => {
+  const problem = VRPEngine.dummyProblem()
+  const output = await VRPEngine.solve(problem)
+  res.send(output)
+})
+
+app.post('/solve-vroom', async (req, res) => {
+  const apiProblem = req.body as APIProblem
+  const output = await VroomEngine.solve(apiProblem)
+  res.send(output)
+})
+app.post('/solve-vrp', async (req, res) => {
+  const apiProblem = req.body as APIProblem
+  const problem: VRPProblem = {
     fleet: {
       profiles: [{ name: 'car' }],
-      vehicles: [
-        {
-          vehicleIds: ['v1', 'v2'],
-          typeId: 'm1',
-          costs: { fixed: 0, distance: 1, time: 1 },
-          profile: { matrix: 'car' },
+      vehicles: apiProblem.vehicles.map((v) => {
+        return {
           capacity: [100000],
+          costs: { distance: 1, fixed: 1, time: 1 },
+          profile: { matrix: 'car', scale: 1 },
           shifts: [
             {
-              start: { earliest: '2022-12-02T09:00:00Z', location: { lat: 48.86776, lng: 2.29286 } },
-              end: { latest: '2022-12-02T17:00:00Z', location: { lat: 48.86776, lng: 2.29286 } },
+              start: {
+                earliest: '2022-12-03T09:00:00Z',
+                location: { lat: v.location.lat, lng: v.location.lng },
+              },
+              end: { latest: '2022-12-03T18:00:00Z', location: { lat: v.location.lat, lng: v.location.lng } },
             },
           ],
-        },
-      ],
+          typeId: 'type_' + v.mechanic_id,
+          vehicleIds: ['vehicle_' + v.mechanic_id],
+        }
+      }),
     },
-  })
+    plan: {
+      jobs: apiProblem.jobs.map((j) => {
+        return {
+          id: `job_${j.building_id}_${j.device_id}`,
+          services: [
+            {
+              places: [{ duration: 3600, location: j.location }],
+            },
+          ],
+        }
+      }),
+    },
+    // objectives: [
+    //   [
+    //     {
+    //       type: 'minimize-cost',
+    //     },
+    //   ],
+    //   [
+    //     {
+    //       type: 'maximize-tours',
+    //     },
+    //   ],
+    //   [
+    //     {
+    //       type: 'balance-max-load',
+    //     },
+    //   ],
+    // ],
+  }
+
+  const output = await VRPEngine.solve(problem)
   res.send(output)
 })
 
