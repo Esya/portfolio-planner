@@ -1,4 +1,4 @@
-import { APIProblem, DatasetResponse } from '@wemaintain/api-interfaces'
+import { APIProblem, APISolution, DatasetResponse } from '@wemaintain/api-interfaces'
 
 export class PortfolioAPI {
   static async getDataset(countryCode: string): Promise<DatasetResponse> {
@@ -6,7 +6,7 @@ export class PortfolioAPI {
     return await response.json()
   }
 
-  static async optimize(request: APIProblem): Promise<any> {
+  static async optimize(request: APIProblem): Promise<APISolution> {
     // JSON query
     const response = await fetch(`http://localhost:3333/solve-vroom`, {
       method: 'POST',

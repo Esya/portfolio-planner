@@ -1,12 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
-import { DatasetBuilding, DatasetDevice, DatasetEngineer } from '@wemaintain/api-interfaces'
+import { APISolution, DatasetBuilding, DatasetDevice, DatasetEngineer } from '@wemaintain/api-interfaces'
 
 export interface DatasetState {
   country: 'FR' | 'UK' | 'SG'
   devices: DatasetDevice[]
   buildings: DatasetBuilding[]
   engineers: DatasetEngineer[]
+  solution?: APISolution
 }
 
 const initialState: DatasetState = {
@@ -33,10 +34,14 @@ export const datasetSlice = createSlice({
       state.engineers = action.payload
     },
     runOptimizer: (state, action: PayloadAction<undefined>) => {},
+    setSolution: (state, action: PayloadAction<APISolution>) => {
+      state.solution = action.payload
+    },
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { setCountry, setDevices, setEngineers, setBuildings, runOptimizer } = datasetSlice.actions
+export const { setCountry, setDevices, setEngineers, setBuildings, runOptimizer, setSolution } =
+  datasetSlice.actions
 
 export default datasetSlice.reducer

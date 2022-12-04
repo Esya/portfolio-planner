@@ -2,7 +2,14 @@ import { APIProblem, APIProblemJob, APIProblemVehicle } from '@wemaintain/api-in
 import { call, select, takeEvery, put } from 'typed-redux-saga'
 import { PortfolioAPI } from '../../lib/portfolio-api'
 import { selectBuildings, selectCountry, selectDevices, selectEngineers } from './dataset.selectors'
-import { runOptimizer, setBuildings, setCountry, setDevices, setEngineers } from './dataset.slice'
+import {
+  runOptimizer,
+  setBuildings,
+  setCountry,
+  setDevices,
+  setEngineers,
+  setSolution,
+} from './dataset.slice'
 
 function* changeCountry() {
   console.log('Changing country - fetching new dataset')
@@ -50,7 +57,7 @@ function* optimize() {
     } as APIProblemVehicle
   })
 
-  yield* call(PortfolioAPI.optimize, {
+  const solution = yield* call(PortfolioAPI.optimize, {
     country,
     jobs,
     vehicles,
@@ -58,8 +65,11 @@ function* optimize() {
       numberOfDays: 3,
       dayStartHour: 9,
       dayEndHour: 18,
+      increaseCostEachDay: true,
     },
   } as APIProblem)
+
+  yield* put(setSolution(solution))
 }
 
 export function* datasetSaga() {

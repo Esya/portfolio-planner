@@ -69,6 +69,7 @@ export interface APIDayOptions {
   numberOfDays: number
   dayStartHour: number
   dayEndHour: number
+  increaseCostEachDay: boolean
 }
 
 export interface APIProblem {
@@ -81,6 +82,34 @@ export interface APIProblem {
   dayOptions?: APIDayOptions
 }
 
+export type APISolutionTourStep = {
+  building_id?: string
+  device_id?: string
+  arrival: number
+  distance: number
+  duration: number
+  service: number
+  location: [number, number]
+  type: 'start' | 'job' | 'end'
+  waiting_time: number
+}
+
+export type APISolutionTour = {
+  day_number?: number
+  cost: number
+  distance: number
+  duration: number
+  geometry?: string
+  service: number
+  setup: number
+  steps: APISolutionTourStep[]
+}
+
+export interface APISolutionVehicle {
+  mechanic_id: string
+  tours: APISolutionTour[]
+}
+
 export interface APISolution {
   statistics: {
     cost: number
@@ -91,27 +120,7 @@ export interface APISolution {
     waiting_time: number
     computing_times: { loading: number; solving: number; routing: number }
   }
-  vehicles: {
-    mechanic_id: string
-    tours: {
-      cost: number
-      distance: number
-      duration: number
-      geometry?: string
-      service: number
-      setup: number
-      steps: {
-        building_id?: string
-        arrival: number
-        distance: number
-        duration: number
-        service: number
-        location: [number, number]
-        type: 'start' | 'job' | 'end'
-        waiting_time: number
-      }[]
-    }[]
-  }[]
+  vehicles: APISolutionVehicle[]
   //@TODO
   unassigned?: any
 }

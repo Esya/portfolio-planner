@@ -62,6 +62,8 @@ export interface VroomRoute {
   setup: number
   geometry?: string
   steps: VroomStep[]
+  vehicle: number
+  description: string
 }
 
 export interface VroomStep {
@@ -73,6 +75,6 @@ export interface VroomStep {
   service: number
   setup: number
   waiting_time: number
-  arrivaal: number
+  arrival: number
   distance: number
 }

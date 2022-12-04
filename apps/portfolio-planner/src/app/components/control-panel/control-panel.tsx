@@ -5,6 +5,7 @@ import Tab from '@mui/material/Tab'
 import { EngineerTable } from '../engineer-table/engineer-table'
 import { useDispatch } from 'react-redux'
 import { runOptimizer } from '../../slices/dataset/dataset.slice'
+import SimulationResults from '../simulation-results/simulation-results'
 
 /* eslint-disable-next-line */
 export interface ControlPanelProps {}
@@ -27,11 +28,13 @@ export function ControlPanel(props: ControlPanelProps) {
         }}
       >
         <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
+          <Tab label="Dataset" />
           <Tab label="Base scenario" />
           <Tab label="Scenario #1" />
           <Tab label="Scenario #2" />
         </Tabs>
-        <EngineerTable />
+        {value == 0 && <EngineerTable />}
+        {value == 1 && <SimulationResults />}
         <Button variant="outlined" onClick={() => dispatch(runOptimizer())}>
           Run Optimizer
         </Button>

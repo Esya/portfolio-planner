@@ -1,4 +1,12 @@
-import { APIDayOptions, APIProblem, APIProblemVehicle, APISolution } from '@wemaintain/api-interfaces'
+import {
+  APIDayOptions,
+  APIProblem,
+  APIProblemVehicle,
+  APISolution,
+  APISolutionTour,
+  APISolutionTourStep,
+  APISolutionVehicle,
+} from '@wemaintain/api-interfaces'
 import { Logger } from '@wemaintain/logger'
 import { writeFile } from 'fs/promises'
 import { tmpName } from 'tmp-promise'
@@ -33,8 +41,8 @@ export class VroomEngine {
       const v = input[i]
       const output = {
         description: v.mechanic_id.toString(),
-        start: [v.location.lng, v.location.lat],
-        end: [v.location.lng, v.location.lat],
+        start: [v.location.lng + 0.00001 * i, v.location.lat + 0.00001 * i],
+        end: [v.location.lng + 0.00001 * i, v.location.lat + 0.00001 * i],
         ...commonOptions,
       } as VroomVehicle
 
@@ -45,9 +53,13 @@ export class VroomEngine {
           return {
             ...output,
             id: vehicleIndex++,
+            costs: {
+              per_hour: dayOptions.increaseCostEachDay ? 3600 + 3600 * day * 10 : 3600,
+              fixed: 0 + 50000 * day,
+            },
             description: `${v.mechanic_id.toString()}_${day}`,
             time_window: tw,
-          }
+          } as VroomVehicle
         })
         vehicles.push(...splitByDay)
       }
@@ -79,8 +91,55 @@ export class VroomEngine {
    * @param solution
    * @returns
    */
-  protected static convertSolution(solution: VroomSolution): APISolution {
+  public static convertSolution(solution: VroomSolution): APISolution {
     const stats = solution.summary
+    const mechanics = new Map<string, APISolutionVehicle>()
+    const solutionVehicles: APISolutionVehicle[] = []
+
+    solution.routes.forEach((route) => {
+      // Extract mechanic_id and optionally day_number
+      const [mechanicId, day] = route.description.split('_')
+      if (!mechanics.get(mechanicId)) {
+        mechanics.set(mechanicId, { mechanic_id: mechanicId, tours: [] })
+      }
+
+      const mechanic = mechanics.get(mechanicId)
+
+      // Build steps
+      const steps: APISolutionTourStep[] = route.steps.map((step) => {
+        const isJob = step.type === 'job'
+        let buildingId: string, deviceId: string
+
+        if (isJob) {
+          ;[buildingId, deviceId] = step.description.split('_')
+        }
+
+        return {
+          arrival: step.arrival,
+          distance: step.distance,
+          duration: step.duration,
+          location: step.location,
+          service: step.service,
+          type: step.type,
+          waiting_time: step.waiting_time,
+          building_id: buildingId,
+          device_id: deviceId,
+        }
+      })
+
+      // Save tour
+      const tour: APISolutionTour = {
+        cost: route.cost,
+        distance: route.distance,
+        duration: route.duration,
+        service: route.service,
+        setup: route.setup,
+        day_number: parseInt(day),
+        geometry: route.geometry,
+        steps: steps,
+      }
+      mechanic.tours.push(tour)
+    })
 
     return {
       statistics: {
@@ -96,7 +155,7 @@ export class VroomEngine {
           routing: stats.computing_times.routing,
         },
       },
-      vehicles: [],
+      vehicles: [...mechanics.values()],
     }
   }
 

@@ -15,4 +15,5 @@ services:
       - '$PWD/conf:/conf'
     environment:
       - VROOM_ROUTER=osrm
-    image: 'vroomvrp/vroom-docker:v1.12.2'
+    # image: 'vroomvrp/vroom-docker:v1.12.2'
+    image: 'vroom-docker'

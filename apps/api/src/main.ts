@@ -45,9 +45,11 @@ app.get('/solve-dummy', async (req, res) => {
 
 app.post('/solve-vroom', async (req, res) => {
   const apiProblem = req.body as APIProblem
-  const output = await VroomEngine.solve(apiProblem)
-  res.send(output)
+  const vroomSolution = await VroomEngine.solve(apiProblem)
+  const apiSolution = VroomEngine.convertSolution(vroomSolution)
+  res.send(apiSolution)
 })
+
 app.post('/solve-vrp', async (req, res) => {
   const apiProblem = req.body as APIProblem
   const problem: VRPProblem = {
