@@ -1,7 +1,7 @@
-import { logger } from './logger'
+import { Logger } from './logger'
 
-describe('logger', () => {
-  it('should work', () => {
-    expect(logger()).toEqual('logger')
+describe('Logger', () => {
+  it('should be defined', () => {
+    expect(Logger).toHaveProperty('info')
   })
 })

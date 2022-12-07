@@ -1,13 +1,23 @@
+require('isomorphic-fetch')
+
 import * as express from 'express'
 import * as cors from 'cors'
 import * as bodyParser from 'body-parser'
+import { Server } from 'socket.io'
+import { createServer } from 'http'
 
-import { APIProblem, DatasetResponse, Message } from '@wemaintain/api-interfaces'
+import {
+  APIProblem,
+  DatasetResponse,
+  EngineersStatsRequest,
+  EngineersStatsResponse,
+  Message,
+} from '@wemaintain/api-interfaces'
 import { config } from 'dotenv'
 import { DatasetBuilder } from './app/dataset-builder'
 import { VRPEngine } from './app/engines/vrp/vrp-engine'
-import { VRPProblem } from './app/engines/vrp/vrp.interfaces'
 import { VroomEngine } from './app/engines/vroom/vroom-engine'
+import { EngineersStats } from './app/stats/engineers-stats'
 
 config()
 const app = express()
@@ -31,86 +41,51 @@ app.get('/dataset/:countryCode', async (req, res) => {
   const data = await DatasetBuilder.loadFromFile(req.params.countryCode)
   res.send({
     buildings: data.buildings,
-    devices: data.devices,
     engineers: data.engineers,
   } as DatasetResponse)
 })
 
-//:48.86776,"longitude":2.29286,"country":"FR"},{"building_id":4537,"building_name":"Les Fontaines","latitude":48.85428,"longitude":2.49141,"cou
 app.get('/solve-dummy', async (req, res) => {
   const problem = VRPEngine.dummyProblem()
   const output = await VRPEngine.solve(problem)
   res.send(output)
 })
 
+app.post('/engineers-stats', async (req, res) => {
+  try {
+    const input = req.body as EngineersStatsRequest
+    const [fromHome, betweenDevices] = await Promise.all([
+      EngineersStats.fromHome(input),
+      EngineersStats.betweenDevices(input),
+    ])
+    return { fromHome, betweenDevices } as EngineersStatsResponse
+  } catch (e) {
+    res.status(500).send(e)
+  }
+})
+
 app.post('/solve-vroom', async (req, res) => {
-  const apiProblem = req.body as APIProblem
-  const vroomSolution = await VroomEngine.solve(apiProblem)
-  const apiSolution = VroomEngine.convertSolution(vroomSolution)
-  res.send(apiSolution)
+  try {
+    const apiProblem = req.body as APIProblem
+    const vroomSolution = await VroomEngine.solve(apiProblem)
+    const apiSolution = VroomEngine.convertSolution(vroomSolution)
+    res.send(apiSolution)
+  } catch (e) {
+    res.status(500).send(e)
+  }
 })
 
 app.post('/solve-vrp', async (req, res) => {
   const apiProblem = req.body as APIProblem
-  const problem: VRPProblem = {
-    fleet: {
-      profiles: [{ name: 'car' }],
-      vehicles: apiProblem.vehicles.map((v) => {
-        return {
-          capacity: [100000],
-          costs: { distance: 1, fixed: 1, time: 1 },
-          profile: { matrix: 'car', scale: 1 },
-          shifts: [
-            {
-              start: {
-                earliest: '2022-12-03T09:00:00Z',
-                location: { lat: v.location.lat, lng: v.location.lng },
-              },
-              end: { latest: '2022-12-03T18:00:00Z', location: { lat: v.location.lat, lng: v.location.lng } },
-            },
-          ],
-          typeId: 'type_' + v.mechanic_id,
-          vehicleIds: ['vehicle_' + v.mechanic_id],
-        }
-      }),
-    },
-    plan: {
-      jobs: apiProblem.jobs.map((j) => {
-        return {
-          id: `job_${j.building_id}_${j.device_id}`,
-          services: [
-            {
-              places: [{ duration: 3600, location: j.location }],
-            },
-          ],
-        }
-      }),
-    },
-    // objectives: [
-    //   [
-    //     {
-    //       type: 'minimize-cost',
-    //     },
-    //   ],
-    //   [
-    //     {
-    //       type: 'maximize-tours',
-    //     },
-    //   ],
-    //   [
-    //     {
-    //       type: 'balance-max-load',
-    //     },
-    //   ],
-    // ],
-  }
-
-  const output = await VRPEngine.solve(problem)
-  res.send(output)
+  const vrpProblem = await VRPEngine.convertProblem(apiProblem)
+  const vrpSolution = await VRPEngine.solve(vrpProblem)
+  const apiSolution = await VRPEngine.convertSolution(vrpSolution)
+  res.send(apiSolution)
 })
 
 const port = process.env.port || 3333
-const server = app.listen(port, () => {
+const httpServer = createServer(app)
+const io = new Server(httpServer)
+httpServer.listen(port, () => {
   console.log('Listening at http://localhost:' + port + '/api')
 })
-server.on('error', console.error)

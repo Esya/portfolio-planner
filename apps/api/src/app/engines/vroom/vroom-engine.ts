@@ -5,13 +5,13 @@ import {
   APISolution,
   APISolutionTour,
   APISolutionTourStep,
-  APISolutionVehicle,
+  APISolutionEngineer,
 } from '@wemaintain/api-interfaces'
 import { Logger } from '@wemaintain/logger'
 import { writeFile } from 'fs/promises'
 import { tmpName } from 'tmp-promise'
 import { VroomJob, VroomProblem, VroomVehicle, VroomTimeWindow, VroomSolution } from './vroom.interfaces'
-import { DateTime } from 'luxon'
+import { DateTime, Duration } from 'luxon'
 
 export class VroomEngine {
   protected static makeVehicles(
@@ -41,13 +41,13 @@ export class VroomEngine {
       const v = input[i]
       const output = {
         description: v.mechanic_id.toString(),
-        start: [v.location.lng + 0.00001 * i, v.location.lat + 0.00001 * i],
-        end: [v.location.lng + 0.00001 * i, v.location.lat + 0.00001 * i],
+        start: [v.location.lng, v.location.lat],
+        end: [v.location.lng, v.location.lat],
         ...commonOptions,
       } as VroomVehicle
 
       if (!dayOptions) {
-        vehicles.push({ id: vehicleIndex++, ...output })
+        vehicles.push({ id: vehicleIndex++, ...output, costs: { fixed: 0 } })
       } else {
         const splitByDay = time_windows.map((tw, day) => {
           return {
@@ -93,14 +93,14 @@ export class VroomEngine {
    */
   public static convertSolution(solution: VroomSolution): APISolution {
     const stats = solution.summary
-    const mechanics = new Map<string, APISolutionVehicle>()
-    const solutionVehicles: APISolutionVehicle[] = []
+    const mechanics = new Map<string, APISolutionEngineer>()
+    const solutionVehicles: APISolutionEngineer[] = []
 
     solution.routes.forEach((route) => {
       // Extract mechanic_id and optionally day_number
       const [mechanicId, day] = route.description.split('_')
       if (!mechanics.get(mechanicId)) {
-        mechanics.set(mechanicId, { mechanic_id: mechanicId, tours: [] })
+        mechanics.set(mechanicId, { mechanic_id: mechanicId, tours: [], stats: {} as any })
       }
 
       const mechanic = mechanics.get(mechanicId)
@@ -116,15 +116,13 @@ export class VroomEngine {
 
         return {
           arrival: step.arrival,
-          distance: step.distance,
-          duration: step.duration,
+          departure: step.arrival + step.duration,
           location: step.location,
-          service: step.service,
-          type: step.type,
-          waiting_time: step.waiting_time,
-          building_id: buildingId,
-          device_id: deviceId,
-        }
+          distance: step.distance,
+          activities: [
+            { type: step.type, building_id: buildingId, device_id: deviceId, location: step.location },
+          ],
+        } as APISolutionTourStep
       })
 
       // Save tour
@@ -143,6 +141,7 @@ export class VroomEngine {
 
     return {
       statistics: {
+        distance: 0,
         cost: stats.cost,
         unassigned: stats.unassigned,
         setup: stats.setup,
@@ -160,26 +159,31 @@ export class VroomEngine {
   }
 
   public static async solve(problem: APIProblem) {
-    const vroomProblem = await this.convertProblem(problem)
+    try {
+      const vroomProblem = await this.convertProblem(problem)
 
-    const problemFile = await tmpName({ postfix: '.json' })
-    await writeFile(problemFile, JSON.stringify(vroomProblem))
+      const problemFile = await tmpName({ postfix: '.json' })
+      await writeFile(problemFile, JSON.stringify(vroomProblem))
 
-    Logger.info('Solving problem', { problemFile })
+      Logger.info('Solving problem', { problemFile })
 
-    const response = await fetch('http://127.0.0.1:3000/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ ...vroomProblem, options: { g: true } }),
-    })
+      const response = await fetch('http://127.0.0.1:3000/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...vroomProblem, options: { g: true } }),
+      })
 
-    const data = await response.json()
-    const solutionFile = await tmpName({ postfix: '.json' })
-    await writeFile(solutionFile, JSON.stringify(data))
-    Logger.info('Received solution', { solutionFile })
+      const data = await response.json()
+      const solutionFile = await tmpName({ postfix: '.json' })
+      await writeFile(solutionFile, JSON.stringify(data))
+      Logger.info('Received solution', { solutionFile })
 
-    return data as VroomSolution
+      return data as VroomSolution
+    } catch (e) {
+      Logger.error(e)
+      return
+    }
   }
 }

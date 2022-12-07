@@ -1,5 +1,3 @@
-require('isomorphic-fetch')
-
 import { DatasetDevice, DatasetBuilding, DatasetEngineer } from '@wemaintain/api-interfaces'
 import { Logger } from '@wemaintain/logger'
 import { existsSync, mkdirSync, writeFileSync } from 'fs'
@@ -9,7 +7,6 @@ export class Dataset {
 
   constructor(
     public readonly countryCode: string,
-    public readonly devices: DatasetDevice[],
     public readonly buildings: DatasetBuilding[],
     public readonly engineers: DatasetEngineer[]
   ) {
@@ -26,7 +23,6 @@ export class Dataset {
     writeFileSync(
       `${this.datasetFolder}/${this.countryCode}-dataset.json`,
       JSON.stringify({
-        devices: this.devices,
         buildings: this.buildings,
         engineers: this.engineers,
       })

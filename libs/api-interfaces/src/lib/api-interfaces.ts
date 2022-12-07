@@ -25,6 +25,7 @@ export interface DatasetBuilding {
   latitude: number
   longitude: number
   country: string
+  devices: DatasetDevice[]
 }
 
 export interface DatasetDevice {
@@ -42,11 +43,16 @@ export interface DatasetEngineer {
   first_name: string
   last_name: string
   country: string
+  latitude: number
+  longitude: number
+  address: string
+  skills: string[]
+  stats: EngineersStatsResponse
 }
 
 export interface APIProblemJob {
   building_id: string
-  device_id: string
+  device_id?: string
   location: {
     lat: number
     lng: number
@@ -82,16 +88,28 @@ export interface APIProblem {
   dayOptions?: APIDayOptions
 }
 
-export type APISolutionTourStep = {
+export type APIActivityType = 'start' | 'job' | 'end' | 'break'
+
+/**
+ * A task is a single actvitiy in a tour step
+ */
+export type APISolutionActivity = {
   building_id?: string
   device_id?: string
+  type: APIActivityType
+  location?: [number, number]
+  time?: {
+    start: number
+    end: number
+  }
+}
+
+export type APISolutionTourStep = {
   arrival: number
+  departure: number
   distance: number
-  duration: number
-  service: number
   location: [number, number]
-  type: 'start' | 'job' | 'end'
-  waiting_time: number
+  activities: APISolutionActivity[]
 }
 
 export type APISolutionTour = {
@@ -105,22 +123,42 @@ export type APISolutionTour = {
   steps: APISolutionTourStep[]
 }
 
-export interface APISolutionVehicle {
+export interface APISolutionEngineer {
   mechanic_id: string
   tours: APISolutionTour[]
+  stats: EngineersStatsResponse
 }
 
 export interface APISolution {
   statistics: {
+    distance: number
     cost: number
     unassigned: number
     setup: number
     service: number
     duration: number
     waiting_time: number
-    computing_times: { loading: number; solving: number; routing: number }
+    computing_times?: { loading: number; solving: number; routing: number }
   }
-  vehicles: APISolutionVehicle[]
+  vehicles: APISolutionEngineer[]
   //@TODO
   unassigned?: any
+}
+
+export interface EngineersStatsRequest {
+  /** Long, lat - Home address */
+  home: [number, number]
+
+  /** List of devices */
+  devices: [number, number][]
+}
+
+export interface EngineersStatsResult {
+  meanTime: number
+  meanDistance: number
+}
+
+export interface EngineersStatsResponse {
+  betweenDevices: EngineersStatsResult
+  fromHome: EngineersStatsResult
 }

@@ -6,6 +6,7 @@ export interface VRPPlace {
   location: VRPLocation
   /** Duration in seconds */
   duration: number
+  tag?: string
   times?: [string, string][]
 }
 
@@ -60,7 +61,56 @@ export interface VRPProblem {
   objectives?: VRPObjective[][]
 }
 
-export interface VRPSolution {}
+export type VRPActivityType = 'service' | 'departure' | 'arrival' | 'break'
+
+export type VRPActivity = {
+  jobId: string
+  jobTag?: string
+  type: VRPActivityType
+  time?: {
+    start: string
+    end: string
+  }
+  location?: VRPLocation
+}
+
+export type VRPStop = {
+  location: VRPLocation
+  time: {
+    arrival: string
+    departure: string
+  }
+  distance: number
+  activities: VRPActivity[]
+}
+
+export interface VRPTour {
+  vehicleId: string
+  typeId: string
+  shiftIndex: number
+  load: number[]
+  statistic: VRPStats
+  stops: VRPStop[]
+}
+
+export type VRPStats = {
+  cost: number
+  distance: number
+  duration: number
+  times: {
+    driving: number
+    serving: number
+    waiting: number
+    break: number
+    commuting: number
+    parking: number
+  }
+}
+
+export interface VRPSolution {
+  statistic: VRPStats
+  tours: VRPTour[]
+}
 
 export type VRPLocations = VRPLocation[]
 export interface VRPMatrix {

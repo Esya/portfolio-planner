@@ -8,7 +8,7 @@ export class PortfolioAPI {
 
   static async optimize(request: APIProblem): Promise<APISolution> {
     // JSON query
-    const response = await fetch(`http://localhost:3333/solve-vroom`, {
+    const response = await fetch(`http://localhost:3333/solve-vrp`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

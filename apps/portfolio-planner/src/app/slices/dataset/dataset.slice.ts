@@ -1,20 +1,25 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createEntityAdapter, createSlice, EntityState } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 import { APISolution, DatasetBuilding, DatasetDevice, DatasetEngineer } from '@wemaintain/api-interfaces'
 
+export const EngineersAdapter = createEntityAdapter<DatasetEngineer>({
+  selectId: (engineer) => engineer.mechanic_id,
+})
+
+export const BuildingAdapter = createEntityAdapter<DatasetBuilding>({
+  selectId: (building) => building.building_id,
+})
+
 export interface DatasetState {
   country: 'FR' | 'UK' | 'SG'
-  devices: DatasetDevice[]
-  buildings: DatasetBuilding[]
-  engineers: DatasetEngineer[]
-  solution?: APISolution
+  buildings: EntityState<DatasetBuilding>
+  engineers: EntityState<DatasetEngineer>
 }
 
 const initialState: DatasetState = {
   country: 'FR',
-  devices: [],
-  buildings: [],
-  engineers: [],
+  buildings: BuildingAdapter.getInitialState(),
+  engineers: EngineersAdapter.getInitialState(),
 }
 
 export const datasetSlice = createSlice({
@@ -24,24 +29,17 @@ export const datasetSlice = createSlice({
     setCountry: (state, action: PayloadAction<string>) => {
       state.country = action.payload as 'FR' | 'UK' | 'SG'
     },
-    setDevices: (state, action: PayloadAction<DatasetDevice[]>) => {
-      state.devices = action.payload
-    },
     setBuildings: (state, action: PayloadAction<DatasetBuilding[]>) => {
-      state.buildings = action.payload
+      BuildingAdapter.setAll(state.buildings, action.payload)
     },
     setEngineers: (state, action: PayloadAction<DatasetEngineer[]>) => {
-      state.engineers = action.payload
+      EngineersAdapter.setAll(state.engineers, action.payload)
     },
     runOptimizer: (state, action: PayloadAction<undefined>) => {},
-    setSolution: (state, action: PayloadAction<APISolution>) => {
-      state.solution = action.payload
-    },
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { setCountry, setDevices, setEngineers, setBuildings, runOptimizer, setSolution } =
-  datasetSlice.actions
+export const { setCountry, setEngineers, setBuildings, runOptimizer } = datasetSlice.actions
 
 export default datasetSlice.reducer
