@@ -1,4 +1,5 @@
 import { EngineersStatsRequest, EngineersStatsResult } from '@wemaintain/api-interfaces'
+import { Logger } from '@wemaintain/logger'
 
 interface Matrice {
   time: [number][]
@@ -40,6 +41,10 @@ export class EngineersStats {
    * @param matrice
    */
   public static async betweenDevices(input: EngineersStatsRequest): Promise<EngineersStatsResult> {
+    if (input.devices.length <= 1) {
+      return { meanDistance: 0, meanTime: 0 }
+    }
+
     const coords: [number, number][] = [...input.devices]
     const coordsString = coords.map((c) => c.join(',')).join(';')
 

@@ -3,8 +3,8 @@
     "maxTime": 600,
     "variation": {
       "intervalType": "sample",
-      "value": 300,
-      "cv": 0.01,
+      "value": 500,
+      "cv": 0.001,
       "isGlobal": true
     }
   },
@@ -22,8 +22,8 @@
   },
   "environment": {
     "parallelism": {
-      "numThreadPools": 6,
-      "threadsPerPool": 8
+      "numThreadPools": 8,
+      "threadsPerPool": 16
     },
     "logging": {
       "enabled": true

@@ -12,6 +12,7 @@ export interface VRPPlace {
 
 export interface VRPService {
   places: VRPPlace[]
+  demand?: number[]
 }
 
 export interface VRPJob {
@@ -25,7 +26,8 @@ export interface VRPJob {
   group?: string
   /** compatibility class. Jobs with different compatibility classes cannot be assigned in the same tour. This is useful to avoid mixing cargo, such as hazardous goods and food. */
   compatibility?: string
-  services: VRPService[]
+  services?: VRPService[]
+  pickups?: VRPService[]
 }
 
 export interface VRPShift {
@@ -61,7 +63,7 @@ export interface VRPProblem {
   objectives?: VRPObjective[][]
 }
 
-export type VRPActivityType = 'service' | 'departure' | 'arrival' | 'break'
+export type VRPActivityType = 'service' | 'departure' | 'arrival' | 'break' | 'pickup'
 
 export type VRPActivity = {
   jobId: string

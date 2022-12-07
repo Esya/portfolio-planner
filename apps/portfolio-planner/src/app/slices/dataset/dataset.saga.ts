@@ -22,7 +22,7 @@ function* optimize() {
 
   // Pick the first 100 devices
   const jobs: APIProblemJob[] = buildings
-    .slice(301, 700)
+    .slice(0, 30000)
     .map((building) => {
       let location: { lat: number; lng: number }
       if (building.latitude < 40) {
@@ -70,7 +70,7 @@ function* optimize() {
   // })
 
   // Pick the first 3 engineers
-  const vehicles = engineers.slice(0, 2000).map((e) => {
+  const vehicles = engineers.slice(0, 3000).map((e) => {
     return {
       mechanic_id: e.mechanic_id,
       location: { lat: e.latitude, lng: e.longitude },

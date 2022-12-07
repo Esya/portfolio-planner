@@ -9,6 +9,7 @@ export interface MapMarker extends Coordinates {}
 
 export interface MapPoint extends Coordinates {
   tooltip?: string
+  color?: string
 }
 
 export interface MapPolyline {

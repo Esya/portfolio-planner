@@ -7,6 +7,7 @@ import {
   APISolutionEngineer,
   EngineersStatsRequest,
   APIProblemJob,
+  APISolutionActivity,
 } from '@wemaintain/api-interfaces'
 import { Logger } from '@wemaintain/logger'
 import { spawn } from 'child_process'
@@ -89,6 +90,7 @@ export class VRPEngine {
       departure: 'start',
       arrival: 'end',
       service: 'job',
+      pickup: 'job',
     }
 
     return mappings[type]
@@ -177,24 +179,36 @@ export class VRPEngine {
         departure: DateTime.fromISO(stop.time.departure).toSeconds(),
         distance: stop.distance,
         location: [stop.location.lat, stop.location.lng],
-        activities: stop.activities.map((activity) => {
-          const [building_id, device_id] = activity.jobTag
-            ? activity.jobTag.split('_')
-            : [undefined, undefined]
-          return {
-            type: this.convertVRPStep(activity.type),
-            time: activity.time
-              ? {
-                  start: DateTime.fromISO(activity.time.start).toSeconds(),
-                  end: DateTime.fromISO(activity.time.end).toSeconds(),
-                }
-              : undefined,
+        activities: stop.activities.flatMap((activity) => {
+          const buildingId = activity.jobId || undefined
+          const deviceIds = activity.jobTag ? activity.jobTag.split('_') : []
+          const type = this.convertVRPStep(activity.type)
+          if (type !== 'job') {
+            return [
+              {
+                type,
+                time: activity.time
+                  ? {
+                      start: DateTime.fromISO(activity.time.start).toSeconds(),
+                      end: DateTime.fromISO(activity.time.end).toSeconds(),
+                    }
+                  : undefined,
+                location: activity.location
+                  ? [activity.location.lat, activity.location.lng]
+                  : [stop.location.lat, stop.location.lng],
+              } as APISolutionActivity,
+            ]
+          }
+
+          // Split it per device
+          return deviceIds.map((deviceId) => ({
+            type,
             location: activity.location
               ? [activity.location.lat, activity.location.lng]
               : [stop.location.lat, stop.location.lng],
-            building_id,
-            device_id,
-          }
+            device_id: deviceId,
+            building_id: buildingId,
+          }))
         }),
       } as APISolutionTourStep
     })
@@ -202,33 +216,42 @@ export class VRPEngine {
     return steps
   }
 
-  public static async convertProblem(apiProblem: APIProblem): Promise<VRPProblem> {
-    // Build jobs by grouping activities by building
+  protected static async convertAPIJobs(apiJobs: APIProblemJob[]): Promise<VRPJob[]> {
     const jobsByBuilding = new Map<string, APIProblemJob[]>()
-    apiProblem.jobs.forEach((job) => {
+    apiJobs.forEach((job) => {
       const jobs = jobsByBuilding.get(job.building_id) || []
       jobsByBuilding.set(job.building_id, [...jobs, job])
     })
 
     const buildingIds = [...jobsByBuilding.keys()]
-    const vrpJobs: VRPJob[] = buildingIds.map((buildingId) => ({
-      id: buildingId,
-      services: jobsByBuilding.get(buildingId).map(
-        (job) =>
-          ({
+    const vrpJobs: VRPJob[] = buildingIds.map((buildingId) => {
+      const jobsForBuilding = jobsByBuilding.get(buildingId)
+      const firstJob = jobsForBuilding[0]
+      const totalDuration = jobsForBuilding.reduce((acc, job) => acc + job.duration, 0)
+
+      return {
+        id: buildingId,
+        pickups: [
+          {
             places: [
               {
-                duration: job.duration,
-                location: {
-                  lat: job.location.lat,
-                  lng: job.location.lng,
-                },
-                tag: `${job.building_id}_${job.device_id}`,
+                duration: totalDuration,
+                location: firstJob.location,
+                tag: jobsForBuilding.map((j) => j.device_id).join('_'),
               },
             ],
-          } as VRPService)
-      ),
-    }))
+            demand: [totalDuration],
+          },
+        ],
+      }
+    })
+
+    return vrpJobs
+  }
+
+  public static async convertProblem(apiProblem: APIProblem): Promise<VRPProblem> {
+    // Build jobs by grouping activities by building
+    const vrpJobs = await this.convertAPIJobs(apiProblem.jobs)
 
     const problem: VRPProblem = {
       fleet: {
@@ -265,7 +288,7 @@ export class VRPEngine {
           }
 
           return {
-            capacity: [100000],
+            capacity: [1000000],
             costs: { distance: 1, fixed: 1, time: 1 },
             profile: { matrix: 'car', scale: 1 },
             shifts: shifts,
@@ -288,7 +311,7 @@ export class VRPEngine {
           {
             type: 'minimize-cost',
           },
-          { type: 'balance-activities' },
+          { type: 'balance-max-load' },
         ],
       ],
     }
