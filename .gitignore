@@ -2,6 +2,7 @@
 
 # Logs
 combined.log
+conf/access.log
 
 # Credentials
 .env

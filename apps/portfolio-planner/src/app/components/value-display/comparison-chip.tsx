@@ -7,12 +7,15 @@ export const ComparisonChip = (props: { value: number; reference?: number }) => 
 
   let difference = Math.round(((props.value - props.reference) / props.reference) * 100)
 
+  let color: 'default' | 'error' | 'success' = 'default'
+  if (difference > 20) {
+    color = 'error'
+  }
+  if (difference < -20) {
+    color = 'success'
+  }
+
   return (
-    <Chip
-      label={`${difference > 0 ? '+' : ''}${difference}%`}
-      size="small"
-      color={difference > 0 ? 'error' : 'success'}
-      sx={{ m: 1 }}
-    />
+    <Chip label={`${difference > 0 ? '+' : ''}${difference}%`} size="small" color={color} sx={{ m: 1 }} />
   )
 }
