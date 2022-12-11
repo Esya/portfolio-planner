@@ -3,8 +3,8 @@
     "maxTime": 600,
     "variation": {
       "intervalType": "sample",
-      "value": 500,
-      "cv": 0.001,
+      "value": 300,
+      "cv": 0.01,
       "isGlobal": true
     }
   },

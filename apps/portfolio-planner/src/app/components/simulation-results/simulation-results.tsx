@@ -1,4 +1,4 @@
-import { CardContent, Divider } from '@mui/material'
+import { CardContent, Divider, Paper, styled } from '@mui/material'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
 import Box from '@mui/system/Box'
@@ -8,6 +8,8 @@ import { selectAllEngineers } from '../../slices/dataset/dataset.selectors'
 import { selectSolution } from '../../slices/results/results.seslectors'
 import { highlightEngineer } from '../../slices/results/results.slice'
 import SummaryTable, { SummaryRow } from './summary-table'
+import Grid from '@mui/material/Unstable_Grid2' // Grid version 2
+import { StatItem } from '../value-display/stat-item'
 
 /* eslint-disable-next-line */
 export interface SimulationResultProps {}
@@ -56,7 +58,23 @@ export function SimulationResults(props: SimulationResultProps) {
     <Box sx={{ m: 2 }}>
       <Card sx={{ backgroundColor: 'primary.800' }}>
         <CardHeader title="Simulation Summary" />
-        <CardContent>
+        <CardContent sx={{ py: 0 }}>
+          <Box sx={{ pb: 2 }}>
+            <Grid container spacing={1}>
+              <Grid xs={12} md={3}>
+                <StatItem delta={-3.8} stat="27 min" title="Mean time between devices" />
+              </Grid>
+              <Grid xs={12} md={3}>
+                <StatItem delta={-3.8} stat="4.83 km" title="Mean distance between devices" />
+              </Grid>
+              <Grid xs={12} md={3}>
+                <StatItem delta={-3.8} stat="31 min" title="Mean time to devices" />
+              </Grid>
+              <Grid xs={12} md={3}>
+                <StatItem delta={-3.8} stat="16.30 km" title="Mean distance to devices" />
+              </Grid>
+            </Grid>
+          </Box>
           <SummaryTable rows={rows} onRowSelected={rowClicked} />
         </CardContent>
       </Card>
