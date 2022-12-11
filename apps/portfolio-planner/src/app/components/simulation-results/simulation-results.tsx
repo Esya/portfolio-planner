@@ -63,16 +63,36 @@ export function SimulationResults(props: SimulationResultProps) {
           <Box sx={{ pb: 2 }}>
             <Grid container spacing={1}>
               <Grid xs={12} md={3}>
-                <StatItem delta={baselineStats.mtbd} stat="27 min" title="Mean time between devices" />
+                <StatItem
+                  reference={baselineStats.mtbd / 60}
+                  value={1421 / 60}
+                  unit="min"
+                  title="Mean time between devices"
+                />
               </Grid>
               <Grid xs={12} md={3}>
-                <StatItem delta={baselineStats.mdbd} stat="4.83 km" title="Mean distance between devices" />
+                <StatItem
+                  reference={baselineStats.mdbd / 1000}
+                  value={4821 / 1000}
+                  unit="km"
+                  title="Mean distance between devices"
+                />
               </Grid>
               <Grid xs={12} md={3}>
-                <StatItem delta={baselineStats.mttd} stat="31 min" title="Mean time to devices" />
+                <StatItem
+                  reference={baselineStats.mttd / 60}
+                  value={2777 / 60}
+                  unit="min"
+                  title="Mean time to devices"
+                />
               </Grid>
               <Grid xs={12} md={3}>
-                <StatItem delta={baselineStats.mdtd} stat="16.30 km" title="Mean distance to devices" />
+                <StatItem
+                  reference={baselineStats.mdtd / 1000}
+                  value={17261 / 1000}
+                  unit="km"
+                  title="Mean distance to devices"
+                />
               </Grid>
             </Grid>
           </Box>

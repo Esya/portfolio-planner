@@ -16,7 +16,7 @@ export function Points(props: PointsProps) {
   }
 
   const elems = points.map((point, i) => (
-    <CircleMarker center={[point.lat, point.lng]} radius={5} key={i} color={point.color}>
+    <CircleMarker center={[point.lat, point.lng]} radius={5} key={point.id} color={point.color}>
       <Tooltip>{point.tooltip}</Tooltip>
     </CircleMarker>
   ))

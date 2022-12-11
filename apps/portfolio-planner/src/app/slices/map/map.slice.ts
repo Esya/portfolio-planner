@@ -8,6 +8,7 @@ interface Coordinates {
 export interface MapMarker extends Coordinates {}
 
 export interface MapPoint extends Coordinates {
+  id: string
   tooltip?: string
   color?: string
 }

@@ -24,9 +24,14 @@ function* highlightEngineerSaga() {
   const points: MapPoint[] = []
 
   // Display results
-  vehicle.tours.forEach((tour) => {
+  vehicle.tours.forEach((tour, tourIndex) => {
     const stops = tour.steps.map((step) => step.location)
-    const newPoints = stops.map((l) => ({ lat: l[0], lng: l[1], color: '#0000ff' }))
+    const newPoints = stops.map((l, stopIndex) => ({
+      lat: l[0],
+      lng: l[1],
+      color: '#0000ff',
+      id: `${id}-${tourIndex}-${stopIndex}`,
+    }))
     points.push(...newPoints)
     polylines.push({ path: newPoints })
   })
@@ -36,7 +41,7 @@ function* highlightEngineerSaga() {
   const buildings = yield* select(selectBuildings)
   const previousBuildings = buildings
     .filter((b) => b.devices.filter((d) => d.mechanic_id.toString() === id).length > 0)
-    .map((b) => ({ lat: b.latitude, lng: b.longitude, color: '#ff0000' }))
+    .map((b) => ({ lat: b.latitude, lng: b.longitude, color: '#ff0000', id: `${id}-${b.building_id}` }))
 
   yield* put(setPoints([...points, ...previousBuildings]))
 }
