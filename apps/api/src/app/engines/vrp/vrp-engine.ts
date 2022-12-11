@@ -147,7 +147,7 @@ export class VRPEngine {
         EngineersStats.betweenDevices(input),
       ])
 
-      v.stats = { fromHome, betweenDevices }
+      v.stats = { fromHome, betweenDevices, countDevices: devices.length }
     })
 
     await Promise.all(doStats)

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { CircleMarker, Tooltip } from 'react-leaflet'
+import { useSelector } from 'react-redux'
 import useDeepCompareEffect from 'use-deep-compare-effect'
+import { selectPoints } from '../../slices/map/map.selectors'
 import { MapPoint } from '../../slices/map/map.slice'
 
 export interface PointsProps {
@@ -8,15 +10,12 @@ export interface PointsProps {
 }
 
 export function Points(props: PointsProps) {
-  if (!props.points) {
+  const points = useSelector(selectPoints)
+  if (!points) {
     return <></>
   }
 
-  // const [coords, setCoords] = useState<MapPoint[]>(props.points)
-  // useEffect(() => setCoords(props.points), [props.points])
-  useDeepCompareEffect(() => {}, [props.points])
-
-  const elems = props.points.map((point, i) => (
+  const elems = points.map((point, i) => (
     <CircleMarker center={[point.lat, point.lng]} radius={5} key={i} color={point.color}>
       <Tooltip>{point.tooltip}</Tooltip>
     </CircleMarker>

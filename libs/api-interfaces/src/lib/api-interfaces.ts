@@ -17,6 +17,7 @@ export interface DatasetResponse {
   buildings: DatasetBuilding[]
   devices: DatasetDevice[]
   engineers: DatasetEngineer[]
+  stats: GlobalStats
 }
 
 export interface DatasetBuilding {
@@ -161,4 +162,14 @@ export interface EngineersStatsResult {
 export interface EngineersStatsResponse {
   betweenDevices: EngineersStatsResult
   fromHome: EngineersStatsResult
+  countDevices: number
+}
+
+export interface GlobalStats {
+  mttd: number
+  mdtd: number
+  mtbd: number
+  mdbd: number
+  assignedUnits: number
+  unassignedUnits: number
 }

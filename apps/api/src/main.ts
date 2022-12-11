@@ -41,6 +41,7 @@ app.get('/dataset/:countryCode', async (req, res) => {
   const data = await DatasetBuilder.loadFromFile(req.params.countryCode)
   res.send({
     buildings: data.buildings,
+    stats: data.stats,
     engineers: data.engineers,
   } as DatasetResponse)
 })

@@ -1,4 +1,10 @@
-import { DatasetDevice, DatasetBuilding, DatasetEngineer } from '@wemaintain/api-interfaces'
+import {
+  DatasetDevice,
+  DatasetBuilding,
+  DatasetEngineer,
+  DatasetResponse,
+  GlobalStats,
+} from '@wemaintain/api-interfaces'
 import { Logger } from '@wemaintain/logger'
 import { existsSync, mkdirSync, writeFileSync } from 'fs'
 
@@ -8,7 +14,8 @@ export class Dataset {
   constructor(
     public readonly countryCode: string,
     public readonly buildings: DatasetBuilding[],
-    public readonly engineers: DatasetEngineer[]
+    public readonly engineers: DatasetEngineer[],
+    public readonly stats: GlobalStats
   ) {
     buildings.sort((a, b) => a.building_id - b.building_id)
   }
@@ -25,7 +32,8 @@ export class Dataset {
       JSON.stringify({
         buildings: this.buildings,
         engineers: this.engineers,
-      })
+        stats: this.stats,
+      } as DatasetResponse)
     )
   }
 }

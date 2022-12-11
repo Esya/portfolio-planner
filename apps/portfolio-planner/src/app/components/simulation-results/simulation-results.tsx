@@ -4,7 +4,7 @@ import CardHeader from '@mui/material/CardHeader'
 import Box from '@mui/system/Box'
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { selectAllEngineers } from '../../slices/dataset/dataset.selectors'
+import { selectAllEngineers, selectStats } from '../../slices/dataset/dataset.selectors'
 import { selectSolution } from '../../slices/results/results.seslectors'
 import { highlightEngineer } from '../../slices/results/results.slice'
 import SummaryTable, { SummaryRow } from './summary-table'
@@ -16,6 +16,7 @@ export interface SimulationResultProps {}
 
 export function SimulationResults(props: SimulationResultProps) {
   const solution = useSelector(selectSolution)
+  const baselineStats = useSelector(selectStats)
   const engineers = useSelector(selectAllEngineers)
   const dispatch = useDispatch()
 
@@ -62,16 +63,16 @@ export function SimulationResults(props: SimulationResultProps) {
           <Box sx={{ pb: 2 }}>
             <Grid container spacing={1}>
               <Grid xs={12} md={3}>
-                <StatItem delta={-3.8} stat="27 min" title="Mean time between devices" />
+                <StatItem delta={baselineStats.mtbd} stat="27 min" title="Mean time between devices" />
               </Grid>
               <Grid xs={12} md={3}>
-                <StatItem delta={-3.8} stat="4.83 km" title="Mean distance between devices" />
+                <StatItem delta={baselineStats.mdbd} stat="4.83 km" title="Mean distance between devices" />
               </Grid>
               <Grid xs={12} md={3}>
-                <StatItem delta={-3.8} stat="31 min" title="Mean time to devices" />
+                <StatItem delta={baselineStats.mttd} stat="31 min" title="Mean time to devices" />
               </Grid>
               <Grid xs={12} md={3}>
-                <StatItem delta={-3.8} stat="16.30 km" title="Mean distance to devices" />
+                <StatItem delta={baselineStats.mdtd} stat="16.30 km" title="Mean distance to devices" />
               </Grid>
             </Grid>
           </Box>

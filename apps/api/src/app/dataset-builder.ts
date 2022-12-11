@@ -3,9 +3,11 @@ import {
   DatasetDevice,
   DatasetEngineer,
   EngineersStatsRequest,
+  GlobalStats,
 } from '@wemaintain/api-interfaces'
 import { Databricks } from '@wemaintain/databricks'
 import { Logger } from '@wemaintain/logger'
+import e = require('express')
 import { readFileSync } from 'fs'
 import { Dataset } from './dataset'
 import { EngineersStats } from './stats/engineers-stats'
@@ -41,7 +43,28 @@ export class DatasetBuilder {
       })
 
     await this.addStatsToEngineers(engineers, filteredBuildings)
-    return new Dataset(countryCode, filteredBuildings, engineers)
+    const stats = this.computeStats(engineers)
+    return new Dataset(countryCode, filteredBuildings, engineers, stats)
+  }
+
+  protected static computeStats(engineers: DatasetEngineer[]): GlobalStats {
+    const avgProperty = (
+      engineers: DatasetEngineer[],
+      type: 'betweenDevices' | 'fromHome',
+      property: 'meanTime' | 'meanDistance'
+    ) => {
+      const sum = engineers.reduce((acc, e) => acc + e.stats[type][property], 0)
+      return sum / engineers.length
+    }
+
+    return {
+      assignedUnits: 0,
+      unassignedUnits: 0,
+      mdbd: avgProperty(engineers, 'betweenDevices', 'meanDistance'),
+      mtbd: avgProperty(engineers, 'betweenDevices', 'meanTime'),
+      mttd: avgProperty(engineers, 'fromHome', 'meanTime'),
+      mdtd: avgProperty(engineers, 'fromHome', 'meanDistance'),
+    }
   }
 
   public static async loadFromFile(countryCode: string) {
@@ -51,7 +74,7 @@ export class DatasetBuilder {
     const content = readFileSync(filename)
     const json = JSON.parse(content.toString())
 
-    return new Dataset(countryCode, json.buildings, json.engineers)
+    return new Dataset(countryCode, json.buildings, json.engineers, json.stats)
   }
 
   protected static async addStatsToEngineers(engineers: DatasetEngineer[], buildings: DatasetBuilding[]) {
@@ -77,6 +100,6 @@ export class DatasetBuilder {
       EngineersStats.fromHome(input),
       EngineersStats.betweenDevices(input),
     ])
-    engineer.stats = { fromHome, betweenDevices }
+    engineer.stats = { fromHome, betweenDevices, countDevices: input.devices.length }
   }
 }

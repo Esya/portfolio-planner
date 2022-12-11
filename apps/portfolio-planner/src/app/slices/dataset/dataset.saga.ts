@@ -3,8 +3,7 @@ import { call, select, takeEvery, put } from 'typed-redux-saga'
 import { PortfolioAPI } from '../../lib/portfolio-api'
 import { selectBuildings, selectCountry, selectAllEngineers } from './dataset.selectors'
 
-import { runOptimizer, setBuildings, setCountry, setEngineers } from './dataset.slice'
-import { MapPoint, setGeojsons, setPoints } from '../map/map.slice'
+import { runOptimizer, setBuildings, setCountry, setEngineers, setStats } from './dataset.slice'
 import { setSolution } from '../results/results.slice'
 
 function* changeCountry() {
@@ -13,6 +12,7 @@ function* changeCountry() {
   const dataset = yield* call(PortfolioAPI.getDataset, country)
   yield* put(setBuildings(dataset.buildings))
   yield* put(setEngineers(dataset.engineers))
+  yield* put(setStats(dataset.stats))
 }
 
 function* optimize() {
