@@ -30,60 +30,6 @@ import {
 } from './vrp.interfaces'
 
 export class VRPEngine {
-  public static dummyProblem() {
-    const numJobs = 60
-    const numVehicles = 3
-    const jobs: VRPJob[] = []
-    const vehicles: VRPVehicle[] = []
-
-    // Generate random jobs
-    for (let i = 0; i < numJobs; i++) {
-      jobs.push({
-        id: 'job' + i,
-        services: [
-          {
-            places: [
-              {
-                location: { lat: 48.85428 + Math.random() * 0.1, lng: 2.34706 + Math.random() * 0.1 },
-                duration: 3600,
-              },
-            ],
-          },
-        ],
-      })
-    }
-
-    for (let i = 0; i < numVehicles; i++) {
-      vehicles.push({
-        vehicleIds: ['vehicle' + i],
-        typeId: 'type' + i,
-        capacity: [10000],
-        shifts: [
-          {
-            start: { earliest: '2022-12-03T09:00:00Z', location: { lat: 48.86776, lng: 2.29286 } },
-            end: { latest: '2022-12-09T14:00:00Z', location: { lat: 48.86776, lng: 2.29286 } },
-          },
-        ],
-        costs: {
-          distance: 1,
-          time: 1,
-          fixed: 0,
-        },
-        profile: { matrix: 'car' },
-      })
-    }
-
-    return {
-      plan: {
-        jobs: jobs,
-      },
-      fleet: {
-        profiles: [{ name: 'car' }],
-        vehicles: vehicles,
-      },
-    }
-  }
-
   protected static convertVRPStep(type: VRPActivityType): APIActivityType {
     const mappings: { [key in VRPActivityType]: APIActivityType } = {
       break: 'break',
@@ -153,7 +99,8 @@ export class VRPEngine {
     await Promise.all(doStats)
 
     return {
-      statistics: {
+      stats: EngineersStats.computeGlobalStats(vehicles.map((v) => v.stats)),
+      vrpStats: {
         cost: solution.statistic.cost,
         service: solution.statistic.times.serving,
         distance: solution.statistic.distance,
@@ -311,7 +258,7 @@ export class VRPEngine {
           {
             type: 'minimize-cost',
           },
-          { type: 'balance-max-load' },
+          { type: 'balance-max-load', options: { threshold: 0.02 } },
         ],
       ],
     }

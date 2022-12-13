@@ -65,7 +65,7 @@ export function SimulationResults(props: SimulationResultProps) {
               <Grid xs={12} md={3}>
                 <StatItem
                   reference={baselineStats.mtbd / 60}
-                  value={1421 / 60}
+                  value={solution?.stats ? solution.stats.mtbd / 60 : undefined}
                   unit="min"
                   title="Mean time between devices"
                 />
@@ -73,7 +73,7 @@ export function SimulationResults(props: SimulationResultProps) {
               <Grid xs={12} md={3}>
                 <StatItem
                   reference={baselineStats.mdbd / 1000}
-                  value={4821 / 1000}
+                  value={solution?.stats ? solution.stats.mdbd / 1000 : undefined}
                   unit="km"
                   title="Mean distance between devices"
                 />
@@ -81,7 +81,7 @@ export function SimulationResults(props: SimulationResultProps) {
               <Grid xs={12} md={3}>
                 <StatItem
                   reference={baselineStats.mttd / 60}
-                  value={2777 / 60}
+                  value={solution?.stats ? solution.stats.mttd / 60 : undefined}
                   unit="min"
                   title="Mean time to devices"
                 />
@@ -89,7 +89,7 @@ export function SimulationResults(props: SimulationResultProps) {
               <Grid xs={12} md={3}>
                 <StatItem
                   reference={baselineStats.mdtd / 1000}
-                  value={17261 / 1000}
+                  value={solution?.stats ? solution.stats.mdtd / 1000 : undefined}
                   unit="km"
                   title="Mean distance to devices"
                 />

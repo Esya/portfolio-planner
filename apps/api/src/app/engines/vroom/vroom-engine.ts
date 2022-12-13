@@ -140,7 +140,15 @@ export class VroomEngine {
     })
 
     return {
-      statistics: {
+      stats: {
+        assignedUnits: 0,
+        mdbd: 0,
+        mdtd: 0,
+        mtbd: 0,
+        mttd: 0,
+        unassignedUnits: 0,
+      },
+      vrpStats: {
         distance: 0,
         cost: stats.cost,
         unassigned: stats.unassigned,

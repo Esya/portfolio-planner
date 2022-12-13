@@ -55,6 +55,7 @@ export interface VRPVehicle {
 
 export interface VRPObjective {
   type: string
+  options?: any
 }
 
 export interface VRPProblem {

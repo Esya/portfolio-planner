@@ -131,7 +131,8 @@ export interface APISolutionEngineer {
 }
 
 export interface APISolution {
-  statistics: {
+  stats: GlobalStats
+  vrpStats: {
     distance: number
     cost: number
     unassigned: number

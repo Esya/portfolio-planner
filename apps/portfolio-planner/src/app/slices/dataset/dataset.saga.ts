@@ -20,9 +20,31 @@ function* optimize() {
   const buildings = yield* select(selectBuildings)
   const engineers = yield* select(selectAllEngineers)
 
-  // Pick the first 100 devices
+  // OPTIONS
+  const maxEngineers = 3000
+  const maxBuildings = 10000
+  const limitToExistingPortfolio = true
+
+  const vehicles = engineers.slice(0, maxEngineers).map((e) => {
+    return {
+      mechanic_id: e.mechanic_id,
+      location: { lat: e.latitude, lng: e.longitude },
+    } as APIProblemVehicle
+  })
+
+  const engineersIDs = vehicles.map((v) => v.mechanic_id.toString())
+
   const jobs: APIProblemJob[] = buildings
-    .slice(0, 100)
+    .filter((b) => {
+      if (!limitToExistingPortfolio) {
+        // Do not filter
+        return true
+      }
+
+      // Otherwise, keep building only if one device is attached to one of our engineers
+      return b.devices.filter((d) => engineersIDs.includes(d.mechanic_id.toString())).length > 0
+    })
+    .slice(0, maxBuildings)
     .map((building) => {
       let location: { lat: number; lng: number }
       if (building.latitude < 40) {
@@ -47,35 +69,6 @@ function* optimize() {
       )
     })
     .flat()
-  // const jobs = devices.slice(1000, 1800).map((d) => {
-  //   const building = buildings.find((b) => b.building_id.toString() === d.building_id)
-  //   if (!building) {
-  //     throw new Error('Device ID ' + d.device_id + ' has no building')
-  //   }
-
-  //   let location
-  //   if (building.latitude < 40) {
-  //     //@TODO - Dirty fix, we've got a problem with the dataset (lat/lng reversed)
-  //     location = { lat: building.longitude, lng: building.latitude }
-  //   } else {
-  //     location = { lat: building.latitude, lng: building.longitude }
-  //   }
-
-  //   return {
-  //     device_id: d.device_id,
-  //     building_id: d.building_id,
-  //     location: location,
-  //     duration: 900,
-  //   } as APIProblemJob
-  // })
-
-  // Pick the first 3 engineers
-  const vehicles = engineers.slice(0, 3).map((e) => {
-    return {
-      mechanic_id: e.mechanic_id,
-      location: { lat: e.latitude, lng: e.longitude },
-    } as APIProblemVehicle
-  })
 
   try {
     const solution = yield* call(PortfolioAPI.optimize, {

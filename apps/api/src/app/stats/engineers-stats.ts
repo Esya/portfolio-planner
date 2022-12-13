@@ -1,4 +1,9 @@
-import { EngineersStatsRequest, EngineersStatsResult } from '@wemaintain/api-interfaces'
+import {
+  EngineersStatsRequest,
+  EngineersStatsResponse,
+  EngineersStatsResult,
+  GlobalStats,
+} from '@wemaintain/api-interfaces'
 import { Logger } from '@wemaintain/logger'
 
 interface Matrice {
@@ -72,5 +77,25 @@ export class EngineersStats {
     const meanTime = meanTimes.reduce((a, b) => a + b, 0) / meanTimes.length
 
     return { meanDistance, meanTime }
+  }
+
+  public static computeGlobalStats(input: EngineersStatsResponse[]): GlobalStats {
+    const avgProperty = (
+      engineers: EngineersStatsResponse[],
+      type: 'betweenDevices' | 'fromHome',
+      property: 'meanTime' | 'meanDistance'
+    ) => {
+      const sum = engineers.reduce((acc, e) => acc + e[type][property], 0)
+      return sum / engineers.length
+    }
+
+    return {
+      assignedUnits: 0,
+      unassignedUnits: 0,
+      mdbd: avgProperty(input, 'betweenDevices', 'meanDistance'),
+      mtbd: avgProperty(input, 'betweenDevices', 'meanTime'),
+      mttd: avgProperty(input, 'fromHome', 'meanTime'),
+      mdtd: avgProperty(input, 'fromHome', 'meanDistance'),
+    }
   }
 }

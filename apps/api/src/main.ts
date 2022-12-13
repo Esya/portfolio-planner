@@ -46,12 +46,6 @@ app.get('/dataset/:countryCode', async (req, res) => {
   } as DatasetResponse)
 })
 
-app.get('/solve-dummy', async (req, res) => {
-  const problem = VRPEngine.dummyProblem()
-  const output = await VRPEngine.solve(problem)
-  res.send(output)
-})
-
 app.post('/engineers-stats', async (req, res) => {
   try {
     const input = req.body as EngineersStatsRequest

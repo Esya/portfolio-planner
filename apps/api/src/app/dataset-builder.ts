@@ -43,28 +43,10 @@ export class DatasetBuilder {
       })
 
     await this.addStatsToEngineers(engineers, filteredBuildings)
-    const stats = this.computeStats(engineers)
-    return new Dataset(countryCode, filteredBuildings, engineers, stats)
-  }
 
-  protected static computeStats(engineers: DatasetEngineer[]): GlobalStats {
-    const avgProperty = (
-      engineers: DatasetEngineer[],
-      type: 'betweenDevices' | 'fromHome',
-      property: 'meanTime' | 'meanDistance'
-    ) => {
-      const sum = engineers.reduce((acc, e) => acc + e.stats[type][property], 0)
-      return sum / engineers.length
-    }
-
-    return {
-      assignedUnits: 0,
-      unassignedUnits: 0,
-      mdbd: avgProperty(engineers, 'betweenDevices', 'meanDistance'),
-      mtbd: avgProperty(engineers, 'betweenDevices', 'meanTime'),
-      mttd: avgProperty(engineers, 'fromHome', 'meanTime'),
-      mdtd: avgProperty(engineers, 'fromHome', 'meanDistance'),
-    }
+    const stats = engineers.map((e) => e.stats)
+    const globalStats = EngineersStats.computeGlobalStats(stats)
+    return new Dataset(countryCode, filteredBuildings, engineers, globalStats)
   }
 
   public static async loadFromFile(countryCode: string) {

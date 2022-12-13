@@ -1,10 +1,10 @@
 {
   "termination": {
-    "maxTime": 600,
+    "maxTime": 1800,
     "variation": {
       "intervalType": "sample",
-      "value": 300,
-      "cv": 0.01,
+      "value": 500,
+      "cv": 0.0001,
       "isGlobal": true
     }
   },
