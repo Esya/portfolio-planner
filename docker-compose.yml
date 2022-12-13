@@ -7,13 +7,20 @@ services:
       - '${PWD}/openstreetmap-data:/data'
     image: osrm/osrm-backend
     command: osrm-routed --algorithm mld --max-table-size 10000 /data/france-latest.osrm
-  vroom-docker:
-    container_name: vroom
+  osrm-uk:
     ports:
-      - '3000:3000'
+      - '5001:5000'
     volumes:
-      - '$PWD/conf:/conf'
-    environment:
-      - VROOM_ROUTER=osrm
-    # image: 'vroomvrp/vroom-docker:v1.12.2'
-    image: 'vroom-docker'
+      - '${PWD}/openstreetmap-data:/data'
+    image: osrm/osrm-backend
+    command: osrm-routed --algorithm mld --max-table-size 10000 /data/great-britain-latest.osrm
+  # vroom-docker:
+  #   container_name: vroom
+  #   ports:
+  #     - '3000:3000'
+  #   volumes:
+  #     - '$PWD/conf:/conf'
+  #   environment:
+  #     - VROOM_ROUTER=osrm
+  #   # image: 'vroomvrp/vroom-docker:v1.12.2'
+  #   image: 'vroom-docker'

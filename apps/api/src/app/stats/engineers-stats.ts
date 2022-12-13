@@ -4,7 +4,7 @@ import {
   EngineersStatsResult,
   GlobalStats,
 } from '@wemaintain/api-interfaces'
-import { Logger } from '@wemaintain/logger'
+import { OSRM } from '../osrm'
 
 interface Matrice {
   time: [number][]
@@ -25,18 +25,13 @@ export class EngineersStats {
    */
   public static async fromHome(input: EngineersStatsRequest): Promise<EngineersStatsResult> {
     const coords: [number, number][] = [input.home, ...input.devices]
-    const coordsString = coords.map((c) => c.join(',')).join(';')
+    const res = await OSRM.getDistanceMatrix(input.country, coords, [0])
 
-    const response = await fetch(
-      `${process.env.OSRM_SERVER_FRANCE}/table/v1/car/${coordsString}?annotations=duration,distance&sources=0`
-    )
-    const data = await response.json()
-
-    const distances = data.distances[0]
-    const time = data.durations[0]
+    const distances = res.distances[0]
+    const durations = res.durations[0]
 
     const meanDistance = distances.reduce((a, b) => a + b, 0) / distances.length
-    const meanTime = time.reduce((a, b) => a + b, 0) / time.length
+    const meanTime = durations.reduce((a, b) => a + b, 0) / durations.length
 
     return { meanDistance, meanTime }
   }
@@ -50,24 +45,19 @@ export class EngineersStats {
       return { meanDistance: 0, meanTime: 0 }
     }
 
-    const coords: [number, number][] = [...input.devices]
-    const coordsString = coords.map((c) => c.join(',')).join(';')
+    const { distances, durations } = await OSRM.getDistanceMatrix(input.country, [...input.devices])
 
-    const response = await fetch(
-      `${process.env.OSRM_SERVER_FRANCE}/table/v1/car/${coordsString}?annotations=duration,distance`
-    )
-    const data = await response.json()
-
-    const length = data.distances.length
+    const length = distances.length
     const meanDistances: number[] = []
     const meanTimes: number[] = []
 
     for (let i = 0; i < length; i++) {
-      const distances = data.distances[i]
-      const times = data.durations[i]
+      const deviceDistances = distances[i]
+      const deviceDurations = durations[i]
       const meanDistance =
-        distances.filter((_, index) => index !== i).reduce((a, b) => a + b, 0) / (length - 1)
-      const meanTime = times.filter((_, index) => index !== i).reduce((a, b) => a + b, 0) / (length - 1)
+        deviceDistances.filter((_, index) => index !== i).reduce((a, b) => a + b, 0) / (length - 1)
+      const meanTime =
+        deviceDurations.filter((_, index) => index !== i).reduce((a, b) => a + b, 0) / (length - 1)
 
       meanDistances.push(meanDistance)
       meanTimes.push(meanTime)

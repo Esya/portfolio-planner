@@ -1,4 +1,5 @@
 import {
+  Country,
   DatasetBuilding,
   DatasetDevice,
   DatasetEngineer,
@@ -13,7 +14,9 @@ import { Dataset } from './dataset'
 import { EngineersStats } from './stats/engineers-stats'
 
 export class DatasetBuilder {
-  public static async build(countryCode: string) {
+  constructor(public readonly country: Country) {}
+  public async build() {
+    const countryCode = this.country
     Logger.info('Building dataset for country code: ' + countryCode)
     const db = new Databricks()
 
@@ -49,17 +52,7 @@ export class DatasetBuilder {
     return new Dataset(countryCode, filteredBuildings, engineers, globalStats)
   }
 
-  public static async loadFromFile(countryCode: string) {
-    const filename = `./datasets/${countryCode}-dataset.json`
-    Logger.info('Loading dataset from : ' + filename)
-
-    const content = readFileSync(filename)
-    const json = JSON.parse(content.toString())
-
-    return new Dataset(countryCode, json.buildings, json.engineers, json.stats)
-  }
-
-  protected static async addStatsToEngineers(engineers: DatasetEngineer[], buildings: DatasetBuilding[]) {
+  protected async addStatsToEngineers(engineers: DatasetEngineer[], buildings: DatasetBuilding[]) {
     Logger.info('Adding time/distance stats to engineers')
     const p = engineers.map((e) => {
       const home: [number, number] = [e.longitude, e.latitude]
@@ -68,7 +61,7 @@ export class DatasetBuilder {
         return [...acc, ...matchingDevices.map((_) => [b.longitude, b.latitude])]
       }, [] as [number, number][]) as [number, number][]
 
-      return this.addStatsToEngineer(e, { home, devices: deviceCoordinates })
+      return this.addStatsToEngineer(e, { country: this.country, home, devices: deviceCoordinates })
     })
 
     await Promise.all(p)
@@ -76,7 +69,7 @@ export class DatasetBuilder {
     return
   }
 
-  protected static async addStatsToEngineer(engineer: DatasetEngineer, input: EngineersStatsRequest) {
+  protected async addStatsToEngineer(engineer: DatasetEngineer, input: EngineersStatsRequest) {
     Logger.debug('Adding time/distance stats to engineer ' + engineer.mechanic_id)
     const [fromHome, betweenDevices] = await Promise.all([
       EngineersStats.fromHome(input),

@@ -21,8 +21,8 @@ function* optimize() {
   const engineers = yield* select(selectAllEngineers)
 
   // OPTIONS
-  const maxEngineers = 3000
-  const maxBuildings = 10000
+  const maxEngineers = 2000
+  const maxBuildings = 15000
   const limitToExistingPortfolio = true
 
   const vehicles = engineers.slice(0, maxEngineers).map((e) => {

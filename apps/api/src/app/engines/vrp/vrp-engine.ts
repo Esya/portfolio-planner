@@ -1,36 +1,37 @@
 import {
   APIActivityType,
   APIProblem,
+  APIProblemJob,
   APISolution,
+  APISolutionActivity,
+  APISolutionEngineer,
   APISolutionTour,
   APISolutionTourStep,
-  APISolutionEngineer,
+  Country,
   EngineersStatsRequest,
-  APIProblemJob,
-  APISolutionActivity,
 } from '@wemaintain/api-interfaces'
 import { Logger } from '@wemaintain/logger'
 import { spawn } from 'child_process'
 import { readFile, writeFile } from 'fs/promises'
 import { DateTime } from 'luxon'
 import { tmpName } from 'tmp-promise'
-import { EngineersStats } from '../../stats/engineers-stats'
+import { OSRM, OSRMCoordinate } from '../../osrm'
 
+import { EngineersStats } from '../../stats/engineers-stats'
 import {
   VRPActivityType,
   VRPJob,
   VRPLocations,
   VRPMatrix,
   VRPProblem,
-  VRPService,
   VRPShift,
   VRPSolution,
   VRPStop,
-  VRPVehicle,
 } from './vrp.interfaces'
 
 export class VRPEngine {
-  protected static convertVRPStep(type: VRPActivityType): APIActivityType {
+  constructor(public readonly country: Country, public readonly problem: APIProblem) {}
+  protected convertVRPStep(type: VRPActivityType): APIActivityType {
     const mappings: { [key in VRPActivityType]: APIActivityType } = {
       break: 'break',
       departure: 'start',
@@ -42,7 +43,7 @@ export class VRPEngine {
     return mappings[type]
   }
 
-  public static async convertSolution(solution: VRPSolution): Promise<APISolution> {
+  public async convertSolution(solution: VRPSolution): Promise<APISolution> {
     const vehicles: APISolutionEngineer[] = []
     solution.tours.forEach((tour) => {
       let id = tour.vehicleId
@@ -84,6 +85,7 @@ export class VRPEngine {
       const input: EngineersStatsRequest = {
         devices: devices as [number, number][],
         home: home as [number, number],
+        country: this.country,
       }
 
       Logger.debug('Computing stats for engineer #' + v.mechanic_id)
@@ -114,7 +116,7 @@ export class VRPEngine {
     }
   }
 
-  protected static makeStepsFromStops(stops: VRPStop[]): APISolutionTourStep[] {
+  protected makeStepsFromStops(stops: VRPStop[]): APISolutionTourStep[] {
     const steps: APISolutionTourStep[] = stops.map((stop) => {
       const duration = DateTime.fromISO(stop.time.arrival)
         .diff(DateTime.fromISO(stop.time.departure))
@@ -163,7 +165,7 @@ export class VRPEngine {
     return steps
   }
 
-  protected static async convertAPIJobs(apiJobs: APIProblemJob[]): Promise<VRPJob[]> {
+  protected convertAPIJobs(apiJobs: APIProblemJob[]): VRPJob[] {
     const jobsByBuilding = new Map<string, APIProblemJob[]>()
     apiJobs.forEach((job) => {
       const jobs = jobsByBuilding.get(job.building_id) || []
@@ -196,7 +198,7 @@ export class VRPEngine {
     return vrpJobs
   }
 
-  public static async convertProblem(apiProblem: APIProblem): Promise<VRPProblem> {
+  public async convertProblem(apiProblem: APIProblem): Promise<VRPProblem> {
     // Build jobs by grouping activities by building
     const vrpJobs = await this.convertAPIJobs(apiProblem.jobs)
 
@@ -258,7 +260,7 @@ export class VRPEngine {
           {
             type: 'minimize-cost',
           },
-          { type: 'balance-max-load', options: { threshold: 0.02 } },
+          { type: 'balance-max-load', options: { threshold: 0.2 } },
         ],
       ],
     }
@@ -266,7 +268,7 @@ export class VRPEngine {
     return problem
   }
 
-  protected static async executeCommand(command: string, args: string[]) {
+  protected async executeCommand(command: string, args: string[]) {
     Logger.debug(`Executing command: ${command} ${args.join(' ')}`)
     return new Promise((resolve, reject) => {
       const cli = spawn(command, args)
@@ -290,7 +292,7 @@ export class VRPEngine {
     })
   }
 
-  public static async solve(problem: VRPProblem) {
+  public async solve(problem: VRPProblem) {
     const locations = await this.extractLocations(problem)
     const matrix = await this.computeDistanceMatrix(locations)
 
@@ -299,7 +301,7 @@ export class VRPEngine {
     return result
   }
 
-  private static async optimize(problem: VRPProblem, matrix: VRPMatrix): Promise<VRPSolution> {
+  private async optimize(problem: VRPProblem, matrix: VRPMatrix): Promise<VRPSolution> {
     const problemPath = await tmpName({ postfix: '.json' })
     const matrixPath = await tmpName({ postfix: '.json' })
     const outputFile = await tmpName({ postfix: '.json' })
@@ -325,23 +327,19 @@ export class VRPEngine {
     return readFile(outputFile, 'utf8').then((data) => JSON.parse(data))
   }
 
-  private static async computeDistanceMatrix(locations: VRPLocations): Promise<VRPMatrix> {
+  private async computeDistanceMatrix(locations: VRPLocations): Promise<VRPMatrix> {
     // Build query string from buildings
     Logger.info('Computing distance matrix for ' + locations.length + ' locations')
-    const coords = locations.map((b) => `${b.lng},${b.lat}`).join(';')
-    const response = await fetch(
-      `${process.env.OSRM_SERVER_FRANCE}/table/v1/car/${coords}?annotations=duration,distance`
-    )
-    const data = await response.json()
-    Logger.info('Finished computing distance matrix')
+    const coords = locations.map((b) => [b.lng, b.lat] as OSRMCoordinate)
+    const res = await OSRM.getDistanceMatrix(this.country, coords)
 
     // Flatten distances and durations, and round-off to integers
-    const distances = data.distances.flat().map((d) => Math.round(d))
-    const travelTimes = data.durations.flat().map((d) => Math.round(d))
+    const distances = res.distances.flat().map((d) => Math.round(d))
+    const travelTimes = res.durations.flat().map((d) => Math.round(d))
     return { travelTimes, distances, profile: 'car' }
   }
 
-  public static async extractLocations(problem: VRPProblem) {
+  public async extractLocations(problem: VRPProblem) {
     Logger.info('Extracting locations from problem')
     const inputFile = await tmpName({ postfix: '.json' })
     const outputFile = await tmpName({ postfix: '.json' })

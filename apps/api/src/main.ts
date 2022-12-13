@@ -8,6 +8,7 @@ import { createServer } from 'http'
 
 import {
   APIProblem,
+  Country,
   DatasetResponse,
   EngineersStatsRequest,
   EngineersStatsResponse,
@@ -18,6 +19,7 @@ import { DatasetBuilder } from './app/dataset-builder'
 import { VRPEngine } from './app/engines/vrp/vrp-engine'
 import { VroomEngine } from './app/engines/vroom/vroom-engine'
 import { EngineersStats } from './app/stats/engineers-stats'
+import { Dataset } from './app/dataset'
 
 config()
 const app = express()
@@ -31,14 +33,16 @@ app.get('/api', (req, res) => {
 })
 
 app.get('/build/:countryCode', async (req, res) => {
-  const data = await DatasetBuilder.build(req.params.countryCode)
+  const country: Country = req.params.countryCode as Country
+  const builder = new DatasetBuilder(country)
+  const data = await builder.build()
   data.writeToFile()
-  // await data.computeDistanceMatrix()
   res.send()
 })
 
 app.get('/dataset/:countryCode', async (req, res) => {
-  const data = await DatasetBuilder.loadFromFile(req.params.countryCode)
+  const country: Country = req.params.countryCode as Country
+  const data = await Dataset.loadFromFile(country)
   res.send({
     buildings: data.buildings,
     stats: data.stats,
@@ -72,9 +76,10 @@ app.post('/solve-vroom', async (req, res) => {
 
 app.post('/solve-vrp', async (req, res) => {
   const apiProblem = req.body as APIProblem
-  const vrpProblem = await VRPEngine.convertProblem(apiProblem)
-  const vrpSolution = await VRPEngine.solve(vrpProblem)
-  const apiSolution = await VRPEngine.convertSolution(vrpSolution)
+  const engine = new VRPEngine(apiProblem.country, apiProblem)
+  const vrpProblem = await engine.convertProblem(apiProblem)
+  const vrpSolution = await engine.solve(vrpProblem)
+  const apiSolution = await engine.convertSolution(vrpSolution)
   res.send(apiSolution)
 })
 

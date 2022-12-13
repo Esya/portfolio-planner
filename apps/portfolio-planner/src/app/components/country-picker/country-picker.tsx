@@ -8,7 +8,7 @@ import { setCountry } from '../../slices/dataset/dataset.slice'
 export function CountryPicker() {
   const countries = [
     { code: 'FR', name: 'France', icon: 'FR' },
-    { code: 'UK', name: 'United-Kingdom', icon: 'GB' },
+    { code: 'GB', name: 'United-Kingdom', icon: 'GB' },
     { code: 'SG', name: 'Singapore', icon: 'SG' },
   ]
 

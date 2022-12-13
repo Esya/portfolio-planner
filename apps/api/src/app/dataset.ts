@@ -4,9 +4,10 @@ import {
   DatasetEngineer,
   DatasetResponse,
   GlobalStats,
+  Country,
 } from '@wemaintain/api-interfaces'
 import { Logger } from '@wemaintain/logger'
-import { existsSync, mkdirSync, writeFileSync } from 'fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 
 export class Dataset {
   protected datasetFolder: string = 'datasets'
@@ -18,6 +19,16 @@ export class Dataset {
     public readonly stats: GlobalStats
   ) {
     buildings.sort((a, b) => a.building_id - b.building_id)
+  }
+
+  public static loadFromFile(country: Country) {
+    const filename = `./datasets/${country}-dataset.json`
+    Logger.info('Loading dataset from : ' + filename)
+
+    const content = readFileSync(filename)
+    const json = JSON.parse(content.toString())
+
+    return new Dataset(country, json.buildings, json.engineers, json.stats)
   }
 
   public writeToFile() {

@@ -1,3 +1,9 @@
+export enum Country {
+  France = 'FR',
+  GreatBritain = 'GB',
+  Singapore = 'SG',
+}
+
 export interface PortfolioItem {
   contract_id: string
   device_id: string
@@ -80,7 +86,7 @@ export interface APIDayOptions {
 }
 
 export interface APIProblem {
-  country: string
+  country: Country
   jobs: APIProblemJob[]
   vehicles: APIProblemVehicle[]
   /**
@@ -148,6 +154,8 @@ export interface APISolution {
 }
 
 export interface EngineersStatsRequest {
+  country: Country
+
   /** Long, lat - Home address */
   home: [number, number]
 
